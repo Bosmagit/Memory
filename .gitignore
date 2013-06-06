@@ -15,3 +15,4 @@ lein.bat
 /doc
 .project
 .classpath
+.settings
