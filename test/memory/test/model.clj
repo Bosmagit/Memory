@@ -1,7 +1,7 @@
-(ns tictactoe.test.model
-  (:use tictactoe.model)
+(ns memory.test.model
+  (:use memory.model)
   (:use clojure.test)
-  (:require [tictactoe.test.testdata :as td]))
+  (:require [memory.test.testdata :as td]))
 
 (deftest get-board-cell-test
   (let [testboard [[\X \- \-]
