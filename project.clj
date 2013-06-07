@@ -11,4 +11,3 @@
               {:open-browser? false, :stacktraces? false, :auto-reload? false}}}
   :plugins [[lein-ring "0.8.3"]]
   :min-lein-version "2.0.0")
-
