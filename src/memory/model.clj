@@ -1,11 +1,19 @@
 (ns memory.model
   (:require [noir.session :as session]))
 
-(def empty-board [[\- \- \-]
-                  [\- \- \-]
-                  [\- \- \-]])
+(def empty-board [[\- \- \- \-]
+                  [\- \- \- \-]
+                  [\- \- \- \-]
+                  [\- \- \- \-]])
 
-(def init-state {:board empty-board :player \X})
+(def filled-board [[\A \B \C \D]
+                  [\A \B \C \D]
+                  [\A \B \C \D]
+                  [\A \B \C \D]])
+
+
+
+(def init-state {:board empty-board :player 1 :score [0 0] :currentcard \-})
 
 (defn reset-game! []
   (session/put! :game-state init-state))
@@ -24,7 +32,20 @@
 
 (defn other-player 
   ([] (other-player (get-player)))
-  ([player] (if (= player \X) \O \X))) 
+  ([player] (if (= player 1) 2 1))) 
+
+(defn get-score []
+  (:score (session/get :game-state)))
+
+(defn get-currentcard []
+  (:currentcard (session/get :game-state)))
+
+
+(defn score [player]
+  (assoc (get-score) (dec player) (inc ((get-score) (dec player)))))
+
+(defn sameCard? [card1 card2]
+  (= card1 card2))
 
 (defn winner-in-rows? [board player]
   (boolean (some (fn [row] (every? (fn [c] (= c player)) row)) board)))
@@ -63,11 +84,18 @@ returns the character for the winning player, nil if there is no winner"
              (not-any? #(= % \-) all-cells))))
 
 (defn new-state [row col old-state]
+  (let [currentCard (get-currentcard)
+        newCard (get-board-cell filled-board row col)
+        isSameCard (sameCard? currentCard newCard)
+        ]
+   
   (if (and (= (get-board-cell (:board old-state) row col) \-)
            (not (winner? (:board old-state))))
-    {:board (assoc-in (:board old-state) [row col] (:player old-state))
-     :player (other-player (:player old-state))}
-    old-state))
+    {:board (assoc-in (:board old-state) [row col] (get-board-cell filled-board row col))
+     :player (if (and (not isSameCard) (not (= currentCard \-))) (other-player (:player old-state)) (:player old-state))
+     :score (if isSameCard (score (:player old-state)) (:score old-state))
+     :currentcard (if (= currentCard \-) newCard \-) }
+    old-state)))
 
 (defn play! [row col]
   (session/swap! (fn [session-map]

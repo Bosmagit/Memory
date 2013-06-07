@@ -36,7 +36,11 @@
   (layout
     [:div 
      [:p "Player " (model/get-player) ", it is your turn!"]
-     (board-html (model/get-board) true)]))
+     (board-html (model/get-board) true)]
+    [:div
+     [:p "Score player 1: " ((model/get-score) 0)]
+     [:p "Score player 2: " ((model/get-score) 1)]
+     [:p "Current card: " (model/get-currentcard)]]))
 
 (defn winner-screen [winner]
   (layout
