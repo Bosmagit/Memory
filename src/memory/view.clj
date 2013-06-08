@@ -40,7 +40,7 @@
     [:div
      [:p "Score player 1: " ((model/get-score) 0)]
      [:p "Score player 2: " ((model/get-score) 1)]
-     [:p "Current card: " (model/get-currentcard)]]))
+     [:p "Last lookup: " (clojure.string/join ", " (model/get-last-lookup))]]))
 
 (defn winner-screen [winner]
   (layout
