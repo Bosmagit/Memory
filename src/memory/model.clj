@@ -1,17 +1,17 @@
 (ns memory.model
   (:require [noir.session :as session]))
 
-(def init-state {:board empty-board :generated-board generate-board :player 1 :score [0 0] :last-lookup nil :false-lookup nil})
-
 (def empty-board [[\- \- \- \-]
                   [\- \- \- \-]
                   [\- \- \- \-]
                   [\- \- \- \-]])
 
+(def tiles (map char(concat (range 65 73) (range 65 73))))
+
 (def generate-board
   (vec (apply map vector(partition 4 4 (shuffle tiles)))))
 
-(def tiles (map char(concat (range 65 73) (range 65 73))))
+(def init-state {:board empty-board :generated-board generate-board :player 1 :score [0 0] :last-lookup nil :false-lookup nil})
 
 (defn reset-game! []
   (session/put! :game-state init-state))
