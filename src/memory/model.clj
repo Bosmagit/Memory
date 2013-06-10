@@ -6,6 +6,11 @@
                   [\- \- \- \-]
                   [\- \- \- \-]])
 
+(def filled-board [[\A \A \B \B]
+                  [\C \C \D \D]
+                  [\E \E \F \F]
+                  [\G \G \H \H]])
+
 (def memory-items (list 'A 'A 'B 'B 'C 'C 'D 'D 'E 'E 'F 'F 'G 'G 'H 'H))
 
 (defn generate-board
@@ -14,15 +19,15 @@
     (let [list-size (count list)]
     (if (= list-size 0)
       board
-      (let [random (rand-int (- list-size 1))]
+      (let [random (rand-int list-size)]
         (let [new-list (if (= random 0)
                        (drop 1 list)
-                       (reduce conj (take (- random 1) list) (drop random list)))]
+                       (reduce conj (take random list) (drop (+ random 1) list)))]
 	      (if (= (mod list-size 4) 0)
 	        (generate-board new-list (conj board [(nth list random)]) (+ row 1))
          	(generate-board new-list (assoc board row (conj (get board row) (nth list random))) row))))))))
 
-(def init-state {:board empty-board :generated-board (generate-board memory-items) :player 1 :score [0 0] :last-lookup nil :false-lookup nil})
+(def init-state {:board empty-board :generated-board filled-board :player 1 :score [0 0] :last-lookup nil :false-lookup nil})
 
 (defn reset-game! []
   (session/put! :game-state init-state))
@@ -118,7 +123,7 @@ returns the character for the winning player, nil if there is no winner"
              (not-any? #(= % \-) all-cells))))
 
 (defn new-state [row col old-state]
-  (let [isSameCard (turned-cell-match? (get-last-lookup) [row col])
+  (let [isSameCard (turned-cell-match? (get-last-lookup) [row col]) 
         isDiffirentLookup (not= [row col] (get-last-lookup))
         isNewCard (= (get-board-cell row col) \-)]
   (if (or (and isDiffirentLookup isNewCard) (not= (:false-lookup old-state) nil))
