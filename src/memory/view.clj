@@ -47,6 +47,8 @@
     [:div 
    [:p "The winner is: " winner]
    (board-html (model/get-board) false)
+   [:p "Score player 1: " ((model/get-score) 0)]
+   [:p "Score player 2: " ((model/get-score) 1)]
    (link-to "/" "Reset")]))
 
 (defn draw-screen []
@@ -54,5 +56,7 @@
     [:div
      [:p "It's a draw!"]
      (board-html (model/get-board) false)
+     [:p "Score player 1: " ((model/get-score) 0)]
+     [:p "Score player 2: " ((model/get-score) 1)]
      (link-to "/" "Reset")]))
   

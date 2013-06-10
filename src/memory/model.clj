@@ -66,9 +66,13 @@
   (= card1 card2))
 
 (defn winner?
-  ([] false)
-  ([board] false)
-  ([board player] false))
+  ([] (if (full-board?) (let [scoreP1 ((get-score) 0)
+                              scorep2 ((get-score) 1)] 
+                              (cond 
+                                (= scoreP1 scorep2) nil 
+                                (> scoreP1 scorep2) 1 
+                                :else 2)
+                              )nil)))
 
 (defn full-board?
   ([] (full-board? (get-board)))
@@ -80,7 +84,7 @@
         isDiffirentLookup (not= [row col] (get-last-lookup))
         isNewCard (= (get-board-cell row col) \-)]
   (if (or (and isDiffirentLookup isNewCard) (not= (:false-lookup old-state) nil))
-  (if (and isSameCard (not (winner? (:board old-state))) (= (:false-lookup old-state) nil))
+  (if (and isSameCard (= (:false-lookup old-state) nil))
     {:board (assoc-in (assoc-in (:board old-state) [row col] (get-board-cell (get-generated-board) row col))
                       (get-last-lookup) (get-board-cell (get-generated-board) row col))
      :generated-board (:generated-board old-state)
