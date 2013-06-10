@@ -1,4 +1,4 @@
-(defproject tictactoe "0.1.1"
+(defproject memory "0.1.1"
   :description "Memory using ring, compojure, lib-noir and hiccup"
   :dependencies [[org.clojure/clojure "1.5.1"]
                  [lib-noir "0.4.9"]
