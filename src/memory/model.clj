@@ -6,12 +6,23 @@
                   [\- \- \- \-]
                   [\- \- \- \-]])
 
-(def filled-board [[\A \A \B \B]
-                  [\C \C \D \D]
-                  [\E \E \F \F]
-                  [\G \G \H \H]])
+(def memory-items (list 'A 'A 'B 'B 'C 'C 'D 'D 'E 'E 'F 'F 'G 'G 'H 'H))
 
-(def init-state {:board empty-board :player 1 :score [0 0] :last-lookup nil})
+(defn generate-board
+  ([list] (generate-board list [] -1))
+  ([list board row]
+    (let [list-size (count list)]
+    (if (= list-size 0)
+      board
+      (let [random (rand-int (- list-size 1))]
+        (let [new-list (if (= random 0)
+                       (drop 1 list)
+                       (reduce conj (take (- random 1) list) (drop random list)))]
+	      (if (= (mod list-size 4) 0)
+	        (generate-board new-list (conj board [(nth list random)]) (+ row 1))
+         	(generate-board new-list (assoc board row (conj (get board row) (nth list random))) row))))))))
+
+(def init-state {:board empty-board :generated-board (generate-board memory-items) :player 1 :score [0 0] :last-lookup nil :false-lookup nil})
 
 (defn reset-game! []
   (session/put! :game-state init-state))
@@ -25,14 +36,22 @@
 (defn get-last-lookup []
   (:last-lookup (session/get :game-state)))
 
+(defn get-false-lookup []
+  (:false-lookup (session/get :game-state)))
+
+(defn get-generated-board []
+  (:generated-board (session/get :game-state)))
+
 (defn turn-board-cell
   ([board point]
-    (assoc-in board point (get-in filled-board point))))
+    (assoc-in board point (get-in (get-generated-board) point))))
 
 (defn get-board []
   (if (= (get-last-lookup) nil)
     (:board (session/get :game-state))
-    (turn-board-cell (:board (session/get :game-state)) (get-last-lookup))))
+    (if (= (get-false-lookup) nil)
+      (turn-board-cell (:board (session/get :game-state)) (get-last-lookup))
+      (turn-board-cell (turn-board-cell (:board (session/get :game-state)) (get-last-lookup)) (get-false-lookup)))))
 
 (defn get-board-cell 
   ([row col]
@@ -43,8 +62,8 @@
 (defn turned-cell-match? [firstpoint secondpoint]
   (and
 	  (= 
-	    (get-in filled-board firstpoint) 
-	    (get-in filled-board secondpoint))
+	    (get-in (get-generated-board) firstpoint) 
+	    (get-in (get-generated-board) secondpoint))
    (not= firstpoint secondpoint)))
 
 (defn other-player 
@@ -99,17 +118,24 @@ returns the character for the winning player, nil if there is no winner"
              (not-any? #(= % \-) all-cells))))
 
 (defn new-state [row col old-state]
-  (let [newCard (get-board-cell filled-board row col)
-        isSameCard (turned-cell-match? (get-last-lookup) [row col])]
-  (if (and isSameCard (not (winner? (:board old-state))))
-    {:board (assoc-in (assoc-in (:board old-state) [row col] (get-board-cell filled-board row col))
-                      (get-last-lookup) (get-board-cell filled-board row col))
+  (let [isSameCard (turned-cell-match? (get-last-lookup) [row col])
+        isDiffirentLookup (not= [row col] (get-last-lookup))
+        isNewCard (= (get-board-cell row col) \-)]
+  (if (or (and isDiffirentLookup isNewCard) (not= (:false-lookup old-state) nil))
+  (if (and isSameCard (not (winner? (:board old-state))) (= (:false-lookup old-state) nil))
+    {:board (assoc-in (assoc-in (:board old-state) [row col] (get-board-cell (get-generated-board) row col))
+                      (get-last-lookup) (get-board-cell (get-generated-board) row col))
+     :generated-board (:generated-board old-state)
      :player (:player old-state)
      :score (score (:player old-state))
-     :last-lookup nil }
+     :last-lookup nil
+     :false-lookup nil}
     (if (= (:last-lookup old-state) nil)
-          (assoc old-state :last-lookup [row col])
-          (assoc old-state :last-lookup nil :player (other-player (:player old-state)))))))
+          (assoc old-state :last-lookup [row col] :false-lookup nil)
+          (if (= (:false-lookup old-state) nil)
+            (assoc old-state :false-lookup [row col] :player (other-player (:player old-state)))
+            (assoc old-state :last-lookup [row col] :false-lookup nil))))
+  old-state)))
 
 (defn play! [row col]
   (session/swap! (fn [session-map]
