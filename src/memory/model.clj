@@ -8,13 +8,13 @@
 
 (def tiles (map char(concat (range 65 73) (range 65 73))))
 
-(def generate-board
+(defn generate-board []
   (vec (apply map vector(partition 4 4 (shuffle tiles)))))
 
-(def init-state {:board empty-board :generated-board generate-board :player 1 :score [0 0] :last-lookup nil :false-lookup nil})
+(defn init-state [] {:board empty-board :generated-board (generate-board) :player 1 :score [0 0] :last-lookup nil :false-lookup nil})
 
 (defn reset-game! []
-  (session/put! :game-state init-state))
+  (session/put! :game-state (init-state)))
 
 (defn get-player []
   (:player (session/get :game-state)))
